@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>退休日期计算器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+        }
+        #femaleRetirementAge {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>退休日期计算器</h1>
+        <form id="retirementForm">
+            <label for="birthDate">出生日期：</label>
+            <input type="date" id="birthDate" required>
+            
+            <label for="gender">性别：</label>
+            <select id="gender" required>
+                <option value="male">男</option>
+                <option value="female">女</option>
+            </select>
+            
+            <div id="femaleRetirementAge">
+                <label for="originalRetirementAge">原始退休年龄：</label>
+                <select id="originalRetirementAge">
+                    <option value="55" selected>55岁</option>
+                    <option value="50">50岁</option>
+                </select>
+            </div>
+            
+            <button type="submit">计算退休日期</button>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function calculateRetirementDate(birthDate, gender, originalRetirementAge) {
+            const birthDateObj = new Date(birthDate);
+            let retirementAge, targetAge;
+
+            if (gender === 'male') {
+                retirementAge = 60;
+                targetAge = 63;
+            } else {
+                retirementAge = parseInt(originalRetirementAge);
+                targetAge = retirementAge === 50 ? 55 : 58;
+            }
+
+            let originalRetirementDate = new Date(birthDateObj.getFullYear() + retirementAge, birthDateObj.getMonth(), birthDateObj.getDate());
+            
+            if (originalRetirementDate < new Date('2025-01-01')) {
+                return originalRetirementDate;
+            }
+
+            const monthsToDelay = (targetAge - retirementAge) * 12;
+            const monthsFromPolicyStart = (originalRetirementDate.getFullYear() - 2025) * 12 + originalRetirementDate.getMonth();
+            
+            const delaySpeed = (gender === 'male' || (gender === 'female' && retirementAge === 55)) ? 1/4 : 1/2;
+            
+            const actualDelay = Math.min(monthsToDelay, monthsFromPolicyStart * delaySpeed);
+            
+            originalRetirementDate.setMonth(originalRetirementDate.getMonth() + Math.floor(actualDelay));
+            
+            return originalRetirementDate;
+        }
+
+        document.getElementById('gender').addEventListener('change', function() {
+            const femaleRetirementAgeDiv = document.getElementById('femaleRetirementAge');
+            femaleRetirementAgeDiv.style.display = this.value === 'female' ? 'block' : 'none';
+            if (this.value === 'female') {
+                document.getElementById('originalRetirementAge').value = '55';
+            }
+        });
+
+        document.getElementById('retirementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const birthDate = document.getElementById('birthDate').value;
+            const gender = document.getElementById('gender').value;
+            const originalRetirementAge = gender === 'female' ? document.getElementById('originalRetirementAge').value : '60';
+            
+            const retirementDate = calculateRetirementDate(birthDate, gender, originalRetirementAge);
+            
+            document.getElementById('result').innerHTML = `
+                根据当前政策，您的预计退休日期是：${retirementDate.toLocaleDateString('zh-CN')}
+            `;
+        });
+    </script>
+</body>
+</html>
